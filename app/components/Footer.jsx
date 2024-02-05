@@ -37,7 +37,7 @@ function FooterMenu({menu, primaryDomainUrl}) {
         const isExternal = !url.startsWith('/');
         return isExternal ? (
           <a href={url} key={item.id} rel="noopener noreferrer" target="_blank">
-            {item.title}
+            {item.title} 
           </a>
         ) : (
           <NavLink
