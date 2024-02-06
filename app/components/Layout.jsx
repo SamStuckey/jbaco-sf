@@ -12,11 +12,11 @@ import {
 /**
  * @param {LayoutProps}
  */
+// [wipn8923] START HERE - how do i affect changes to my page?
 export function Layout({cart, children = null, footer, header, isLoggedIn}) {
   return (
     <>
       <CartAside cart={cart} />
-      <SearchAside />
       <SearchAside />
       <MobileMenuAside menu={header?.menu} shop={header?.shop} />
       {header && <Header header={header} cart={cart} isLoggedIn={isLoggedIn} />}

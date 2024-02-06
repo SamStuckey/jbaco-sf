@@ -18,17 +18,60 @@ export async function loader({context}) {
   const {collections} = await storefront.query(FEATURED_COLLECTION_QUERY);
   const featuredCollection = collections.nodes[0];
   const recommendedProducts = storefront.query(RECOMMENDED_PRODUCTS_QUERY);
+  const userBuildTools = storefront.query(USER_BUILD_TOOLS_QUERY);
 
-  return defer({featuredCollection, recommendedProducts});
+  return defer({featuredCollection, recommendedProducts, userBuildTools});
 }
 
 export default function Homepage() {
   /** @type {LoaderReturnData} */
+  // [wipn8923] START HERE - get my list of user journeys to show upd
+  // where does data come from?
   const data = useLoaderData();
   return (
     <div className="home">
+      <UserBuildTools builder={data.builders} />
+
       <FeaturedCollection collection={data.featuredCollection} />
       <RecommendedProducts products={data.recommendedProducts} />
+    </div>
+  );
+}
+
+/**
+ * @param {{
+ *   [wipn8923] what is this??
+ *   builders: UserBuildToolsFragment;
+ * }}
+ */
+function UserBuildTools({builders}) {
+  if (!builder) return null;
+  return (
+    <div className="user-build-tools">
+      <h2>User Build Tools</h2>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Await resolve={builders}>
+          {({builders}) => (
+            <div className="user-build-tools-grid">
+              {builders.nodes.map((builder) => (
+                <Link
+                  key={builder.id}
+                  className="user-build-tools"
+                  to={`/builders/${builder.handle}`}
+                >
+                  <Image
+                    data={builder.images.nodes[0]}
+                    aspectRatio="1/1"
+                    sizes="(min-width: 45em) 20vw, 50vw"
+                  />
+                  <h4>{builder.title}</h4>
+                </Link>
+              ))}
+            </div>
+          )}
+        </Await>
+      </Suspense>
+      <br />
     </div>
   );
 }
@@ -94,6 +137,38 @@ function RecommendedProducts({products}) {
     </div>
   );
 }
+
+// [wipn8923] TODO figure out how to set this up in graphQL
+const USER_BUILD_TOOLS_QUERY = `#graphql
+  fragment RecommendedProduct on Product {
+    id
+    title
+    handle
+    priceRange {
+      minVariantPrice {
+        amount
+        currencyCode
+      }
+    }
+    images(first: 1) {
+      nodes {
+        id
+        url
+        altText
+        width
+        height
+      }
+    }
+  }
+  query RecommendedProducts ($country: CountryCode, $language: LanguageCode)
+    @inContext(country: $country, language: $language) {
+    products(first: 4, sortKey: UPDATED_AT, reverse: true) {
+      nodes {
+        ...RecommendedProduct
+      }
+    }
+  }
+`;
 
 const FEATURED_COLLECTION_QUERY = `#graphql
   fragment FeaturedCollection on Collection {
