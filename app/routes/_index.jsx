@@ -14,161 +14,46 @@ export const meta = () => {
  * @param {LoaderFunctionArgs}
  */
 export async function loader({context}) {
-  const {storefront} = context;
   const {collections} = await storefront.query(FEATURED_COLLECTION_QUERY);
   const featuredCollection = collections.nodes[0];
-  const recommendedProducts = storefront.query(RECOMMENDED_PRODUCTS_QUERY);
-  const userBuildTools = storefront.query(USER_BUILD_TOOLS_QUERY);
-
-  return defer({featuredCollection, recommendedProducts, userBuildTools});
+  return defer({featuredCollection})
+  /** nothing do do, since all i do is show tool tiles **/
 }
 
 export default function Homepage() {
-  /** @type {LoaderReturnData} */
-  // [wipn8923] START HERE - get my list of user journeys to show upd
-  // where does data come from?
   const data = useLoaderData();
+  
   return (
     <div className="home">
-      <UserBuildTools builder={data.builders} />
-
-      <FeaturedCollection collection={data.featuredCollection} />
-      <RecommendedProducts products={data.recommendedProducts} />
+      <BuildTools image={data.collection.image} />
     </div>
   );
 }
 
-/**
- * @param {{
- *   [wipn8923] what is this??
- *   builders: UserBuildToolsFragment;
- * }}
- */
-function UserBuildTools({builders}) {
-  if (!builder) return null;
+function BuildTools({image}) {
+  boardBuilderImage = null;
+  cableBuilderImage = null;
   return (
-    <div className="user-build-tools">
-      <h2>User Build Tools</h2>
-      <Suspense fallback={<div>Loading...</div>}>
-        <Await resolve={builders}>
-          {({builders}) => (
-            <div className="user-build-tools-grid">
-              {builders.nodes.map((builder) => (
-                <Link
-                  key={builder.id}
-                  className="user-build-tools"
-                  to={`/builders/${builder.handle}`}
-                >
-                  <Image
-                    data={builder.images.nodes[0]}
-                    aspectRatio="1/1"
-                    sizes="(min-width: 45em) 20vw, 50vw"
-                  />
-                  <h4>{builder.title}</h4>
-                </Link>
-              ))}
-            </div>
-          )}
-        </Await>
-      </Suspense>
-      <br />
-    </div>
+    {({builders}) => (
+      <div className="user-build-tools-grid">
+        {builders.nodes.map((builder) => (
+          <Link
+            key={builder.id}
+            className="user-build-tools"
+            to={`/builders/${builder.handle}`}
+          >
+            <Image
+              data={builder.images.nodes[0]}
+              aspectRatio="1/1"
+              sizes="(min-width: 45em) 20vw, 50vw"
+            />
+            <h4>{builder.title}</h4>
+          </Link>
+        ))}
+      </div>
+    )}
   );
 }
-
-/**
- * @param {{
- *   collection: FeaturedCollectionFragment;
- * }}
- */
-function FeaturedCollection({collection}) {
-  if (!collection) return null;
-  const image = collection?.image;
-  return (
-    <Link
-      className="featured-collection"
-      to={`/collections/${collection.handle}`}
-    >
-      {image && (
-        <div className="featured-collection-image">
-          <Image data={image} sizes="100vw" />
-        </div>
-      )}
-      <h1>{collection.title}</h1>
-    </Link>
-  );
-}
-
-/**
- * @param {{
- *   products: Promise<RecommendedProductsQuery>;
- * }}
- */
-function RecommendedProducts({products}) {
-  return (
-    <div className="recommended-products">
-      <h2>Recommended Products</h2>
-      <Suspense fallback={<div>Loading...</div>}>
-        <Await resolve={products}>
-          {({products}) => (
-            <div className="recommended-products-grid">
-              {products.nodes.map((product) => (
-                <Link
-                  key={product.id}
-                  className="recommended-product"
-                  to={`/products/${product.handle}`}
-                >
-                  <Image
-                    data={product.images.nodes[0]}
-                    aspectRatio="1/1"
-                    sizes="(min-width: 45em) 20vw, 50vw"
-                  />
-                  <h4>{product.title}</h4>
-                  <small>
-                    <Money data={product.priceRange.minVariantPrice} />
-                  </small>
-                </Link>
-              ))}
-            </div>
-          )}
-        </Await>
-      </Suspense>
-      <br />
-    </div>
-  );
-}
-
-// [wipn8923] TODO figure out how to set this up in graphQL
-const USER_BUILD_TOOLS_QUERY = `#graphql
-  fragment RecommendedProduct on Product {
-    id
-    title
-    handle
-    priceRange {
-      minVariantPrice {
-        amount
-        currencyCode
-      }
-    }
-    images(first: 1) {
-      nodes {
-        id
-        url
-        altText
-        width
-        height
-      }
-    }
-  }
-  query RecommendedProducts ($country: CountryCode, $language: LanguageCode)
-    @inContext(country: $country, language: $language) {
-    products(first: 4, sortKey: UPDATED_AT, reverse: true) {
-      nodes {
-        ...RecommendedProduct
-      }
-    }
-  }
-`;
 
 const FEATURED_COLLECTION_QUERY = `#graphql
   fragment FeaturedCollection on Collection {
@@ -188,37 +73,6 @@ const FEATURED_COLLECTION_QUERY = `#graphql
     collections(first: 1, sortKey: UPDATED_AT, reverse: true) {
       nodes {
         ...FeaturedCollection
-      }
-    }
-  }
-`;
-
-const RECOMMENDED_PRODUCTS_QUERY = `#graphql
-  fragment RecommendedProduct on Product {
-    id
-    title
-    handle
-    priceRange {
-      minVariantPrice {
-        amount
-        currencyCode
-      }
-    }
-    images(first: 1) {
-      nodes {
-        id
-        url
-        altText
-        width
-        height
-      }
-    }
-  }
-  query RecommendedProducts ($country: CountryCode, $language: LanguageCode)
-    @inContext(country: $country, language: $language) {
-    products(first: 4, sortKey: UPDATED_AT, reverse: true) {
-      nodes {
-        ...RecommendedProduct
       }
     }
   }

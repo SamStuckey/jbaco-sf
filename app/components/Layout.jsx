@@ -12,7 +12,6 @@ import {
 /**
  * @param {LayoutProps}
  */
-// [wipn8923] START HERE - how do i affect changes to my page?
 export function Layout({cart, children = null, footer, header, isLoggedIn}) {
   return (
     <>
